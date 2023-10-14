@@ -1,44 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <!-- Include the CesiumJS JavaScript and CSS files -->
-    <script src="https://cesium.com/downloads/cesiumjs/releases/1.110/Build/Cesium/Cesium.js"></script>
-    <link
-      href="https://cesium.com/downloads/cesiumjs/releases/1.110/Build/Cesium/Widgets/widgets.css"
-      rel="stylesheet"
-    />
-    <style>
-      html,
-      body,
-      #viewDiv {
-        height: 100%;
-        width: 100%;
-        padding: 0;
-        margin: 0;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="viewDiv"></div>
-    <script type="module">
-      Cesium.Ion.defaultAccessToken =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwYzA0NWEwYS03MjYwLTQzZmUtODVjZi04MjA1NWI4ZGU3NmIiLCJpZCI6MTcxNjA1LCJpYXQiOjE2OTcxOTU5MTd9.3esoN4Jp2YJtMLJxao7clxc82tf77y_dEDb6chUk6Uk";
+	<head>
+		<meta charset="utf-8" />
+		<!-- Include the CesiumJS JavaScript and CSS files -->
+		<script src="https://cesium.com/downloads/cesiumjs/releases/1.110/Build/Cesium/Cesium.js"></script>
+		<link
+			href="https://cesium.com/downloads/cesiumjs/releases/1.110/Build/Cesium/Widgets/widgets.css"
+			rel="stylesheet"
+		/>
+		<style>
+			html,
+			body,
+			#viewDiv {
+				height: 100%;
+				width: 100%;
+				padding: 0;
+				margin: 0;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="viewDiv"></div>
+		<script type="module">
+			Cesium.Ion.defaultAccessToken =
+				"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwYzA0NWEwYS03MjYwLTQzZmUtODVjZi04MjA1NWI4ZGU3NmIiLCJpZCI6MTcxNjA1LCJpYXQiOjE2OTcxOTU5MTd9.3esoN4Jp2YJtMLJxao7clxc82tf77y_dEDb6chUk6Uk";
 
-      const viewer = new Cesium.Viewer("viewDiv", {
-        terrain: Cesium.Terrain.fromWorldTerrain(),
-      });
+			//Buat viewer
+			const viewer = new Cesium.Viewer("viewDiv", {
+				terrain: Cesium.Terrain.fromWorldTerrain(),
+				baseLayer: new Cesium.ImageryLayer(
+					new Cesium.OpenStreetMapImageryProvider({
+						url: "https://tile.openstreetmap.org/",
+					})
+				),
+				geocoder: false,
+				timeline: false,
+				navigationHelpButton: false,
+				sceneModePicker: false,
+				infoBox: false,
+				baseLayerPicker: false,
+        animation: false
+			});
 
-      viewer.camera.flyTo({
-        destination: Cesium.Cartesian3.fromDegrees(106.803, -6.23, 400),
-        orientation: {
-          heading: Cesium.Math.toRadians(0.0),
-          pitch: Cesium.Math.toRadians(-15.0),
-        },
-      });
+			// Home lokasi camera
+			viewer.camera.flyTo({
+				destination: Cesium.Cartesian3.fromDegrees(106.827, -6.183, 400),
+				orientation: {
+					heading: Cesium.Math.toRadians(0),
+					pitch: Cesium.Math.toRadians(-15),
+				},
+			});
 
-      const buildingTileset = await Cesium.createOsmBuildingsAsync();
-      viewer.scene.primitives.add(buildingTileset);
-    </script>
-  </body>
+			// Nambahin OSM
+			// const buildingTileset = await Cesium.createOsmBuildingsAsync();
+			// viewer.scene.primitives.add(buildingTileset);
+		</script>
+	</body>
 </html>
