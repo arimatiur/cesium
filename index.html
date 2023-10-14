@@ -39,17 +39,32 @@
 				sceneModePicker: false,
 				infoBox: false,
 				baseLayerPicker: false,
-        animation: false
+				animation: false,
 			});
 
-			// Home lokasi camera
-			viewer.camera.flyTo({
-				destination: Cesium.Cartesian3.fromDegrees(106.827, -6.183, 400),
-				orientation: {
-					heading: Cesium.Math.toRadians(0),
-					pitch: Cesium.Math.toRadians(-15),
+			// // Home lokasi camera
+			// viewer.camera.flyTo({
+			// 	destination: Cesium.Cartesian3.fromDegrees(106.827, -6.183, 400),
+			// 	orientation: {
+			// 		heading: Cesium.Math.toRadians(0),
+			// 		pitch: Cesium.Math.toRadians(-15),
+			// 	},
+			// });
+
+			const urlglTF =
+				"https://raw.githubusercontent.com/arimatiur/cesium/main/scene.gltf";
+
+			// Load the glTF model hosted on GitHub
+			var entity = viewer.entities.add({
+				name: "YourModel",
+				position: Cesium.Cartesian3.fromDegrees(106.82712067075663, -6.175472231595957, 0),
+				model: {
+					uri: urlglTF,
+					scale: 1.0,
 				},
 			});
+
+			viewer.zoomTo(entity);
 
 			// Nambahin OSM
 			// const buildingTileset = await Cesium.createOsmBuildingsAsync();
