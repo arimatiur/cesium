@@ -1,71 +1,1374 @@
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Document</title>
-		<script src="https://cesium.com/downloads/cesiumjs/releases/1.110/Build/Cesium/Cesium.js"></script>
-		<link
-			href="https://cesium.com/downloads/cesiumjs/releases/1.110/Build/Cesium/Widgets/widgets.css"
-			rel="stylesheet"
-		/>
-		<style>
-			html,
-			body,
-			#viewDiv {
-				height: 100%;
-				width: 100%;
-				margin: 0;
-				padding: 0;
-			}
-		</style>
-	</head>
-	<body>
-		<div id="viewDiv"></div>
-		<script>
-			async function trivia() {
-				Cesium.Ion.defaultAccessToken =
-					"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiZjI3M2U2NC00ZDdjLTQ5M2UtYTA5MS02MTAyMzQ3NzZmMjIiLCJpZCI6MTcxNjA1LCJpYXQiOjE2OTcxNjg3MTJ9.dwSn52Xw7vxIswry4y00LnjRkVaWIeMx7JGx3Cln8mI";
+<html>
+  <head>
+    <title>osm buildings demo</title>
+    <script
+      type="text/javascript"
+      src="https://unpkg.com/dat.gui@0.7.6/build/dat.gui.min.js"
+    ></script>
+    <style type="text/css">
+      .dg ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        clear: both;
+      }
+      .dg.ac {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 0;
+        z-index: 0;
+      }
+      .dg:not(.ac) .main {
+        overflow: hidden;
+      }
+      .dg.main {
+        -webkit-transition: opacity 0.1s linear;
+        -o-transition: opacity 0.1s linear;
+        -moz-transition: opacity 0.1s linear;
+        transition: opacity 0.1s linear;
+      }
+      .dg.main.taller-than-window {
+        overflow-y: auto;
+      }
+      .dg.main.taller-than-window .close-button {
+        opacity: 1;
+        margin-top: -1px;
+        border-top: 1px solid #2c2c2c;
+      }
+      .dg.main ul.closed .close-button {
+        opacity: 1 !important;
+      }
+      .dg.main:hover .close-button,
+      .dg.main .close-button.drag {
+        opacity: 1;
+      }
+      .dg.main .close-button {
+        -webkit-transition: opacity 0.1s linear;
+        -o-transition: opacity 0.1s linear;
+        -moz-transition: opacity 0.1s linear;
+        transition: opacity 0.1s linear;
+        border: 0;
+        line-height: 19px;
+        height: 20px;
+        cursor: pointer;
+        text-align: center;
+        background-color: #000;
+      }
+      .dg.main .close-button.close-top {
+        position: relative;
+      }
+      .dg.main .close-button.close-bottom {
+        position: absolute;
+      }
+      .dg.main .close-button:hover {
+        background-color: #111;
+      }
+      .dg.a {
+        float: right;
+        margin-right: 15px;
+        overflow-y: visible;
+      }
+      .dg.a.has-save > ul.close-top {
+        margin-top: 0;
+      }
+      .dg.a.has-save > ul.close-bottom {
+        margin-top: 27px;
+      }
+      .dg.a.has-save > ul.closed {
+        margin-top: 0;
+      }
+      .dg.a .save-row {
+        top: 0;
+        z-index: 1002;
+      }
+      .dg.a .save-row.close-top {
+        position: relative;
+      }
+      .dg.a .save-row.close-bottom {
+        position: fixed;
+      }
+      .dg li {
+        -webkit-transition: height 0.1s ease-out;
+        -o-transition: height 0.1s ease-out;
+        -moz-transition: height 0.1s ease-out;
+        transition: height 0.1s ease-out;
+        -webkit-transition: overflow 0.1s linear;
+        -o-transition: overflow 0.1s linear;
+        -moz-transition: overflow 0.1s linear;
+        transition: overflow 0.1s linear;
+      }
+      .dg li:not(.folder) {
+        cursor: auto;
+        height: 27px;
+        line-height: 27px;
+        padding: 0 4px 0 5px;
+      }
+      .dg li.folder {
+        padding: 0;
+        border-left: 4px solid rgba(0, 0, 0, 0);
+      }
+      .dg li.title {
+        cursor: pointer;
+        margin-left: -4px;
+      }
+      .dg .closed li:not(.title),
+      .dg .closed ul li,
+      .dg .closed ul li > * {
+        height: 0;
+        overflow: hidden;
+        border: 0;
+      }
+      .dg .cr {
+        clear: both;
+        padding-left: 3px;
+        height: 27px;
+        overflow: hidden;
+      }
+      .dg .property-name {
+        cursor: default;
+        float: left;
+        clear: left;
+        width: 40%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .dg .c {
+        float: left;
+        width: 60%;
+        position: relative;
+      }
+      .dg .c input[type="text"] {
+        border: 0;
+        margin-top: 4px;
+        padding: 3px;
+        width: 100%;
+        float: right;
+      }
+      .dg .has-slider input[type="text"] {
+        width: 30%;
+        margin-left: 0;
+      }
+      .dg .slider {
+        float: left;
+        width: 66%;
+        margin-left: -5px;
+        margin-right: 0;
+        height: 19px;
+        margin-top: 4px;
+      }
+      .dg .slider-fg {
+        height: 100%;
+      }
+      .dg .c input[type="checkbox"] {
+        margin-top: 7px;
+      }
+      .dg .c select {
+        margin-top: 5px;
+      }
+      .dg .cr.function,
+      .dg .cr.function .property-name,
+      .dg .cr.function *,
+      .dg .cr.boolean,
+      .dg .cr.boolean * {
+        cursor: pointer;
+      }
+      .dg .cr.color {
+        overflow: visible;
+      }
+      .dg .selector {
+        display: none;
+        position: absolute;
+        margin-left: -9px;
+        margin-top: 23px;
+        z-index: 10;
+      }
+      .dg .c:hover .selector,
+      .dg .selector.drag {
+        display: block;
+      }
+      .dg li.save-row {
+        padding: 0;
+      }
+      .dg li.save-row .button {
+        display: inline-block;
+        padding: 0px 6px;
+      }
+      .dg.dialogue {
+        background-color: #222;
+        width: 460px;
+        padding: 15px;
+        font-size: 13px;
+        line-height: 15px;
+      }
+      #dg-new-constructor {
+        padding: 10px;
+        color: #222;
+        font-family: Monaco, monospace;
+        font-size: 10px;
+        border: 0;
+        resize: none;
+        box-shadow: inset 1px 1px 1px #888;
+        word-wrap: break-word;
+        margin: 12px 0;
+        display: block;
+        width: 440px;
+        overflow-y: scroll;
+        height: 100px;
+        position: relative;
+      }
+      #dg-local-explain {
+        display: none;
+        font-size: 11px;
+        line-height: 17px;
+        border-radius: 3px;
+        background-color: #333;
+        padding: 8px;
+        margin-top: 10px;
+      }
+      #dg-local-explain code {
+        font-size: 10px;
+      }
+      #dat-gui-save-locally {
+        display: none;
+      }
+      .dg {
+        color: #eee;
+        font: 11px "Lucida Grande", sans-serif;
+        text-shadow: 0 -1px 0 #111;
+      }
+      .dg.main::-webkit-scrollbar {
+        width: 5px;
+        background: #1a1a1a;
+      }
+      .dg.main::-webkit-scrollbar-corner {
+        height: 0;
+        display: none;
+      }
+      .dg.main::-webkit-scrollbar-thumb {
+        border-radius: 5px;
+        background: #676767;
+      }
+      .dg li:not(.folder) {
+        background: #1a1a1a;
+        border-bottom: 1px solid #2c2c2c;
+      }
+      .dg li.save-row {
+        line-height: 25px;
+        background: #dad5cb;
+        border: 0;
+      }
+      .dg li.save-row select {
+        margin-left: 5px;
+        width: 108px;
+      }
+      .dg li.save-row .button {
+        margin-left: 5px;
+        margin-top: 1px;
+        border-radius: 2px;
+        font-size: 9px;
+        line-height: 7px;
+        padding: 4px 4px 5px 4px;
+        background: #c5bdad;
+        color: #fff;
+        text-shadow: 0 1px 0 #b0a58f;
+        box-shadow: 0 -1px 0 #b0a58f;
+        cursor: pointer;
+      }
+      .dg li.save-row .button.gears {
+        background: #c5bdad
+          url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAANCAYAAAB/9ZQ7AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAQJJREFUeNpiYKAU/P//PwGIC/ApCABiBSAW+I8AClAcgKxQ4T9hoMAEUrxx2QSGN6+egDX+/vWT4e7N82AMYoPAx/evwWoYoSYbACX2s7KxCxzcsezDh3evFoDEBYTEEqycggWAzA9AuUSQQgeYPa9fPv6/YWm/Acx5IPb7ty/fw+QZblw67vDs8R0YHyQhgObx+yAJkBqmG5dPPDh1aPOGR/eugW0G4vlIoTIfyFcA+QekhhHJhPdQxbiAIguMBTQZrPD7108M6roWYDFQiIAAv6Aow/1bFwXgis+f2LUAynwoIaNcz8XNx3Dl7MEJUDGQpx9gtQ8YCueB+D26OECAAQDadt7e46D42QAAAABJRU5ErkJggg==)
+          2px 1px no-repeat;
+        height: 7px;
+        width: 8px;
+      }
+      .dg li.save-row .button:hover {
+        background-color: #bab19e;
+        box-shadow: 0 -1px 0 #b0a58f;
+      }
+      .dg li.folder {
+        border-bottom: 0;
+      }
+      .dg li.title {
+        padding-left: 16px;
+        background: #000
+          url(data:image/gif;base64,R0lGODlhBQAFAJEAAP////Pz8////////yH5BAEAAAIALAAAAAAFAAUAAAIIlI+hKgFxoCgAOw==)
+          6px 10px no-repeat;
+        cursor: pointer;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      .dg .closed li.title {
+        background-image: url(data:image/gif;base64,R0lGODlhBQAFAJEAAP////Pz8////////yH5BAEAAAIALAAAAAAFAAUAAAIIlGIWqMCbWAEAOw==);
+      }
+      .dg .cr.boolean {
+        border-left: 3px solid #806787;
+      }
+      .dg .cr.color {
+        border-left: 3px solid;
+      }
+      .dg .cr.function {
+        border-left: 3px solid #e61d5f;
+      }
+      .dg .cr.number {
+        border-left: 3px solid #2fa1d6;
+      }
+      .dg .cr.number input[type="text"] {
+        color: #2fa1d6;
+      }
+      .dg .cr.string {
+        border-left: 3px solid #1ed36f;
+      }
+      .dg .cr.string input[type="text"] {
+        color: #1ed36f;
+      }
+      .dg .cr.function:hover,
+      .dg .cr.boolean:hover {
+        background: #111;
+      }
+      .dg .c input[type="text"] {
+        background: #303030;
+        outline: none;
+      }
+      .dg .c input[type="text"]:hover {
+        background: #3c3c3c;
+      }
+      .dg .c input[type="text"]:focus {
+        background: #494949;
+        color: #fff;
+      }
+      .dg .c .slider {
+        background: #303030;
+        cursor: ew-resize;
+      }
+      .dg .c .slider-fg {
+        background: #2fa1d6;
+        max-width: 100%;
+      }
+      .dg .c .slider:hover {
+        background: #3c3c3c;
+      }
+      .dg .c .slider:hover .slider-fg {
+        background: #44abda;
+      }
+    </style>
+    <style type="text/css">
+      .dg ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        clear: both;
+      }
+      .dg.ac {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 0;
+        z-index: 0;
+      }
+      .dg:not(.ac) .main {
+        overflow: hidden;
+      }
+      .dg.main {
+        -webkit-transition: opacity 0.1s linear;
+        -o-transition: opacity 0.1s linear;
+        -moz-transition: opacity 0.1s linear;
+        transition: opacity 0.1s linear;
+      }
+      .dg.main.taller-than-window {
+        overflow-y: auto;
+      }
+      .dg.main.taller-than-window .close-button {
+        opacity: 1;
+        margin-top: -1px;
+        border-top: 1px solid #2c2c2c;
+      }
+      .dg.main ul.closed .close-button {
+        opacity: 1 !important;
+      }
+      .dg.main:hover .close-button,
+      .dg.main .close-button.drag {
+        opacity: 1;
+      }
+      .dg.main .close-button {
+        -webkit-transition: opacity 0.1s linear;
+        -o-transition: opacity 0.1s linear;
+        -moz-transition: opacity 0.1s linear;
+        transition: opacity 0.1s linear;
+        border: 0;
+        line-height: 19px;
+        height: 20px;
+        cursor: pointer;
+        text-align: center;
+        background-color: #000;
+      }
+      .dg.main .close-button.close-top {
+        position: relative;
+      }
+      .dg.main .close-button.close-bottom {
+        position: absolute;
+      }
+      .dg.main .close-button:hover {
+        background-color: #111;
+      }
+      .dg.a {
+        float: right;
+        margin-right: 15px;
+        overflow-y: visible;
+      }
+      .dg.a.has-save > ul.close-top {
+        margin-top: 0;
+      }
+      .dg.a.has-save > ul.close-bottom {
+        margin-top: 27px;
+      }
+      .dg.a.has-save > ul.closed {
+        margin-top: 0;
+      }
+      .dg.a .save-row {
+        top: 0;
+        z-index: 1002;
+      }
+      .dg.a .save-row.close-top {
+        position: relative;
+      }
+      .dg.a .save-row.close-bottom {
+        position: fixed;
+      }
+      .dg li {
+        -webkit-transition: height 0.1s ease-out;
+        -o-transition: height 0.1s ease-out;
+        -moz-transition: height 0.1s ease-out;
+        transition: height 0.1s ease-out;
+        -webkit-transition: overflow 0.1s linear;
+        -o-transition: overflow 0.1s linear;
+        -moz-transition: overflow 0.1s linear;
+        transition: overflow 0.1s linear;
+      }
+      .dg li:not(.folder) {
+        cursor: auto;
+        height: 27px;
+        line-height: 27px;
+        padding: 0 4px 0 5px;
+      }
+      .dg li.folder {
+        padding: 0;
+        border-left: 4px solid rgba(0, 0, 0, 0);
+      }
+      .dg li.title {
+        cursor: pointer;
+        margin-left: -4px;
+      }
+      .dg .closed li:not(.title),
+      .dg .closed ul li,
+      .dg .closed ul li > * {
+        height: 0;
+        overflow: hidden;
+        border: 0;
+      }
+      .dg .cr {
+        clear: both;
+        padding-left: 3px;
+        height: 27px;
+        overflow: hidden;
+      }
+      .dg .property-name {
+        cursor: default;
+        float: left;
+        clear: left;
+        width: 40%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .dg .c {
+        float: left;
+        width: 60%;
+        position: relative;
+      }
+      .dg .c input[type="text"] {
+        border: 0;
+        margin-top: 4px;
+        padding: 3px;
+        width: 100%;
+        float: right;
+      }
+      .dg .has-slider input[type="text"] {
+        width: 30%;
+        margin-left: 0;
+      }
+      .dg .slider {
+        float: left;
+        width: 66%;
+        margin-left: -5px;
+        margin-right: 0;
+        height: 19px;
+        margin-top: 4px;
+      }
+      .dg .slider-fg {
+        height: 100%;
+      }
+      .dg .c input[type="checkbox"] {
+        margin-top: 7px;
+      }
+      .dg .c select {
+        margin-top: 5px;
+      }
+      .dg .cr.function,
+      .dg .cr.function .property-name,
+      .dg .cr.function *,
+      .dg .cr.boolean,
+      .dg .cr.boolean * {
+        cursor: pointer;
+      }
+      .dg .cr.color {
+        overflow: visible;
+      }
+      .dg .selector {
+        display: none;
+        position: absolute;
+        margin-left: -9px;
+        margin-top: 23px;
+        z-index: 10;
+      }
+      .dg .c:hover .selector,
+      .dg .selector.drag {
+        display: block;
+      }
+      .dg li.save-row {
+        padding: 0;
+      }
+      .dg li.save-row .button {
+        display: inline-block;
+        padding: 0px 6px;
+      }
+      .dg.dialogue {
+        background-color: #222;
+        width: 460px;
+        padding: 15px;
+        font-size: 13px;
+        line-height: 15px;
+      }
+      #dg-new-constructor {
+        padding: 10px;
+        color: #222;
+        font-family: Monaco, monospace;
+        font-size: 10px;
+        border: 0;
+        resize: none;
+        box-shadow: inset 1px 1px 1px #888;
+        word-wrap: break-word;
+        margin: 12px 0;
+        display: block;
+        width: 440px;
+        overflow-y: scroll;
+        height: 100px;
+        position: relative;
+      }
+      #dg-local-explain {
+        display: none;
+        font-size: 11px;
+        line-height: 17px;
+        border-radius: 3px;
+        background-color: #333;
+        padding: 8px;
+        margin-top: 10px;
+      }
+      #dg-local-explain code {
+        font-size: 10px;
+      }
+      #dat-gui-save-locally {
+        display: none;
+      }
+      .dg {
+        color: #eee;
+        font: 11px "Lucida Grande", sans-serif;
+        text-shadow: 0 -1px 0 #111;
+      }
+      .dg.main::-webkit-scrollbar {
+        width: 5px;
+        background: #1a1a1a;
+      }
+      .dg.main::-webkit-scrollbar-corner {
+        height: 0;
+        display: none;
+      }
+      .dg.main::-webkit-scrollbar-thumb {
+        border-radius: 5px;
+        background: #676767;
+      }
+      .dg li:not(.folder) {
+        background: #1a1a1a;
+        border-bottom: 1px solid #2c2c2c;
+      }
+      .dg li.save-row {
+        line-height: 25px;
+        background: #dad5cb;
+        border: 0;
+      }
+      .dg li.save-row select {
+        margin-left: 5px;
+        width: 108px;
+      }
+      .dg li.save-row .button {
+        margin-left: 5px;
+        margin-top: 1px;
+        border-radius: 2px;
+        font-size: 9px;
+        line-height: 7px;
+        padding: 4px 4px 5px 4px;
+        background: #c5bdad;
+        color: #fff;
+        text-shadow: 0 1px 0 #b0a58f;
+        box-shadow: 0 -1px 0 #b0a58f;
+        cursor: pointer;
+      }
+      .dg li.save-row .button.gears {
+        background: #c5bdad
+          url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAANCAYAAAB/9ZQ7AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAQJJREFUeNpiYKAU/P//PwGIC/ApCABiBSAW+I8AClAcgKxQ4T9hoMAEUrxx2QSGN6+egDX+/vWT4e7N82AMYoPAx/evwWoYoSYbACX2s7KxCxzcsezDh3evFoDEBYTEEqycggWAzA9AuUSQQgeYPa9fPv6/YWm/Acx5IPb7ty/fw+QZblw67vDs8R0YHyQhgObx+yAJkBqmG5dPPDh1aPOGR/eugW0G4vlIoTIfyFcA+QekhhHJhPdQxbiAIguMBTQZrPD7108M6roWYDFQiIAAv6Aow/1bFwXgis+f2LUAynwoIaNcz8XNx3Dl7MEJUDGQpx9gtQ8YCueB+D26OECAAQDadt7e46D42QAAAABJRU5ErkJggg==)
+          2px 1px no-repeat;
+        height: 7px;
+        width: 8px;
+      }
+      .dg li.save-row .button:hover {
+        background-color: #bab19e;
+        box-shadow: 0 -1px 0 #b0a58f;
+      }
+      .dg li.folder {
+        border-bottom: 0;
+      }
+      .dg li.title {
+        padding-left: 16px;
+        background: #000
+          url(data:image/gif;base64,R0lGODlhBQAFAJEAAP////Pz8////////yH5BAEAAAIALAAAAAAFAAUAAAIIlI+hKgFxoCgAOw==)
+          6px 10px no-repeat;
+        cursor: pointer;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      .dg .closed li.title {
+        background-image: url(data:image/gif;base64,R0lGODlhBQAFAJEAAP////Pz8////////yH5BAEAAAIALAAAAAAFAAUAAAIIlGIWqMCbWAEAOw==);
+      }
+      .dg .cr.boolean {
+        border-left: 3px solid #806787;
+      }
+      .dg .cr.color {
+        border-left: 3px solid;
+      }
+      .dg .cr.function {
+        border-left: 3px solid #e61d5f;
+      }
+      .dg .cr.number {
+        border-left: 3px solid #2fa1d6;
+      }
+      .dg .cr.number input[type="text"] {
+        color: #2fa1d6;
+      }
+      .dg .cr.string {
+        border-left: 3px solid #1ed36f;
+      }
+      .dg .cr.string input[type="text"] {
+        color: #1ed36f;
+      }
+      .dg .cr.function:hover,
+      .dg .cr.boolean:hover {
+        background: #111;
+      }
+      .dg .c input[type="text"] {
+        background: #303030;
+        outline: none;
+      }
+      .dg .c input[type="text"]:hover {
+        background: #3c3c3c;
+      }
+      .dg .c input[type="text"]:focus {
+        background: #494949;
+        color: #fff;
+      }
+      .dg .c .slider {
+        background: #303030;
+        cursor: ew-resize;
+      }
+      .dg .c .slider-fg {
+        background: #2fa1d6;
+        max-width: 100%;
+      }
+      .dg .c .slider:hover {
+        background: #3c3c3c;
+      }
+      .dg .c .slider:hover .slider-fg {
+        background: #44abda;
+      }
+    </style>
+    <link
+      type="text/css"
+      rel="stylesheet"
+      href="https://unpkg.com/maptalks/dist/maptalks.css"
+    />
+    <script
+      type="text/javascript"
+      src="https://unpkg.com/maptalks/dist/maptalks.js"
+    ></script>
+    <script
+      type="text/javascript"
+      src="https://unpkg.com/@maptalks/gl/dist/maptalksgl.js"
+    ></script>
+    <script
+      type="text/javascript"
+      src="https://unpkg.com/three@0.138.0/build/three.min.js"
+    ></script>
+    <script
+      type="text/javascript"
+      src="https://unpkg.com/maptalks.three@latest/dist/maptalks.three.js"
+    ></script>
+    <script
+      type="text/javascript"
+      src="https://unpkg.com/three@0.138.0/examples/js/libs/stats.min.js"
+    ></script>
+    <script type="text/javascript" src="buildings.js"></script>
+    <style>
+      html,
+      body {
+        margin: 0px;
+        height: 100%;
+        width: 100%;
+      }
 
-				Cesium.GoogleMaps.defaultApiKey =
-					"AIzaSyCrYEx-heMcTU9iPOzg1yTcBCw3AO3mtTI";
+      #map {
+        width: 100%;
+        height: 100%;
+        background-color: #000;
+      }
+    </style>
+  </head>
 
-				const viewer = new Cesium.Viewer("viewDiv", {
-					timeline: false,
-					animation: false,
-					sceneModePicker: false,
-					baseLayerPicker: false,
-					// The globe does not need to be displayed,
-					// since the Photorealistic 3D Tiles include terrain
-					globe: false,
-				});
+  <body data-new-gr-c-s-check-loaded="14.1131.0" data-gr-ext-installed="">
+    <div id="map">
+      <div
+        class="maptalks-wrapper"
+        style="
+          position: absolute;
+          overflow: hidden;
+          width: 1583px;
+          height: 955px;
+          cursor: default;
+        "
+      >
+        <div
+          class="maptalks-all-layers"
+          style="
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            padding: 0px;
+            margin: 0px;
+            z-index: 0;
+            overflow: visible;
+          "
+        >
+          <div
+            class="maptalks-back-static"
+            style="position: absolute; top: 0px; left: 0px; z-index: 0"
+          ></div>
+          <div
+            class="maptalks-back"
+            unselectable="on"
+            style="
+              position: absolute;
+              top: 0px;
+              left: 0px;
+              z-index: 1;
+              transform: translate3d(0px, 0px, 0px);
+            "
+          >
+            <div
+              class="maptalks-back-layer"
+              unselectable="on"
+              style="position: absolute; top: 0px; left: 0px"
+            ></div>
+          </div>
+          <div
+            class="maptalks-canvas-layer"
+            unselectable="on"
+            style="
+              position: absolute;
+              top: 0px;
+              left: 0px;
+              border: none;
+              z-index: 2;
+            "
+          >
+            <canvas
+              height="955"
+              width="1583"
+              style="width: 1583px; height: 955px"
+            ></canvas>
+          </div>
+          <div
+            class="maptalks-front-static"
+            style="position: absolute; top: 0px; left: 0px; z-index: 3"
+          ></div>
+          <div
+            class="maptalks-front"
+            style="
+              position: absolute;
+              top: 0px;
+              left: 0px;
+              z-index: 4;
+              transform: translate3d(0px, 0px, 0px);
+            "
+          >
+            <div
+              class="maptalks-front-layer"
+              unselectable="on"
+              style="position: absolute; top: 0px; left: 0px; z-index: 0"
+            ></div>
+            <div
+              class="maptalks-ui"
+              style="
+                position: absolute;
+                top: 0px;
+                left: 0px;
+                border: none;
+                z-index: 1;
+              "
+            ></div>
+          </div>
+        </div>
+        <div class="maptalks-control" style="z-index: 1">
+          <div
+            style="
+              position: absolute;
+              overflow: visible;
+              bottom: 0px;
+              left: 0px;
+            "
+          >
+            <div class="maptalks-attribution">
+              <span style="padding: 0px 4px"
+                ><a href="http://maptalks.org" target="_blank">maptalks</a> - ©
+                <a href="http://osm.org">OpenStreetMap</a> contributors, ©
+                <a href="https://carto.com/">CARTO</a></span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        style="
+          position: fixed;
+          top: 0px;
+          left: 0px;
+          cursor: pointer;
+          opacity: 0.9;
+          z-index: 100;
+        "
+      >
+        <canvas
+          width="80"
+          height="48"
+          style="width: 80px; height: 48px; display: block"
+        ></canvas
+        ><canvas
+          width="80"
+          height="48"
+          style="width: 80px; height: 48px; display: none"
+        ></canvas
+        ><canvas
+          width="80"
+          height="48"
+          style="width: 80px; height: 48px; display: none"
+        ></canvas>
+      </div>
+    </div>
+    <script>
+      var map = new maptalks.Map("map", {
+        center: [13.414049129456203, 52.53160987202452],
+        zoom: 17,
+        pitch: 70,
+        bearing: 180,
 
-				// Enable rendering the sky
-				viewer.scene.skyAtmosphere.show = true;
+        centerCross: true,
+        doubleClickZoom: false,
+        baseLayer: new maptalks.TileLayer("tile", {
+          urlTemplate:
+            "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+          subdomains: ["a", "b", "c", "d"],
+          attribution:
+            '&copy; <a href="http://osm.org">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/">CARTO</a>',
+        }),
+      });
 
-				// Add Photorealistic 3D Tiles
-				try {
-					const tileset = await Cesium.createGooglePhotorealistic3DTileset();
-					viewer.scene.primitives.add(tileset);
-				} catch (error) {
-					console.log(`Error loading Photorealistic 3D Tiles tileset.${error}`);
-				}
+      // features to draw
+      var features = [];
 
-				// Point the camera at the Googleplex
-				viewer.scene.camera.setView({
-					destination: new Cesium.Cartesian3(
-						-2693797.551060477,
-						-4297135.517094725,
-						3854700.7470414364
-					),
-					orientation: new Cesium.HeadingPitchRoll(
-						4.6550106925119925,
-						-0.2863894863138836,
-						1.3561760425773173e-7
-					),
-				});
-			}
-			trivia();
-		</script>
-	</body>
+      buildings.forEach(function (b) {
+        features = features.concat(b.features);
+      });
+
+      // the ThreeLayer to draw buildings
+      var threeLayer = new maptalks.ThreeLayer("t", {
+        forceRenderOnMoving: true,
+        forceRenderOnRotating: true,
+        // animation: true
+      });
+
+      var meshs = [];
+      var material = getBuildingsMaterial();
+      material.vertexColors = THREE.VertexColors;
+
+      //https://zhuanlan.zhihu.com/p/199353080
+      const lineMaterial = new THREE.LineBasicMaterial({
+        // 线的颜色
+        color: "rgb(15,159,190)",
+        transparent: true,
+        linewidth: 1,
+        opacity: 0.7,
+        //depthTest: true,
+      });
+      //解决z-flighting
+      lineMaterial.polygonOffset = true;
+      lineMaterial.depthTest = true;
+      lineMaterial.polygonOffsetFactor = 1;
+      lineMaterial.polygonOffsetUnits = 1.0;
+
+      threeLayer.prepareToDraw = function (gl, scene, camera) {
+        stats = new Stats();
+        stats.domElement.style.zIndex = 100;
+        document.getElementById("map").appendChild(stats.domElement);
+
+        var light = new THREE.DirectionalLight(0xffffff);
+        light.position.set(0, -10, 10).normalize();
+        scene.add(light);
+        camera.add(new THREE.PointLight("#fff", 0.5));
+
+        var heightPerLevel = 10;
+        var polygons = features.map((f) => {
+          const polygon = maptalks.GeoJSON.toGeometry(f);
+          var levels = f.properties.levels || 1;
+          polygon.setProperties({
+            height: heightPerLevel * levels,
+          });
+          return polygon;
+        });
+
+        const mesh = threeLayer.toExtrudePolygons(
+          polygons,
+          { interactive: false, topColor: "#fff" },
+          material
+        );
+        meshs.push(mesh);
+
+        var outLine = new OutLine(
+          mesh,
+          { interactive: false },
+          lineMaterial,
+          threeLayer
+        );
+        meshs.push(outLine);
+        threeLayer.addMesh(meshs);
+        initGui();
+        animation();
+      };
+      // threeLayer.addTo(map);
+      const sceneConfig = {
+        postProcess: {
+          enable: true,
+          antialias: { enable: true },
+        },
+      };
+      const groupLayer = new maptalks.GroupGLLayer("group", [threeLayer], {
+        sceneConfig,
+      });
+      groupLayer.addTo(map);
+
+      function getBuildingsMaterial(color = "red") {
+        const material = new THREE.MeshPhongMaterial({
+          // map: texture,
+          transparent: true,
+          color: "rgb(0,0,0)",
+        });
+        return material;
+      }
+
+      function animation() {
+        // layer animation support Skipping frames
+        if (!map.isInteracting()) {
+          threeLayer._needsUpdate = !threeLayer._needsUpdate;
+          if (threeLayer._needsUpdate) {
+            threeLayer.redraw();
+          }
+        }
+        stats.update();
+        requestAnimationFrame(animation);
+      }
+
+      function initGui() {
+        var params = {
+          add: true,
+          color: material.color.getStyle(),
+          show: true,
+          opacity: 1,
+          altitude: 0,
+          lineColor: lineMaterial.color.getStyle(),
+          lineOpacity: lineMaterial.opacity,
+          animateShow: animateShow,
+        };
+        var gui = new dat.GUI();
+        gui.add(params, "add").onChange(function () {
+          if (params.add) {
+            threeLayer.addMesh(meshs);
+          } else {
+            threeLayer.removeMesh(meshs);
+          }
+        });
+        gui
+          .addColor(params, "color")
+          .name("building color")
+          .onChange(function () {
+            material.color.set(params.color);
+          });
+        gui
+          .add(params, "opacity", 0, 1)
+          .name("building opacity")
+          .onChange(function () {
+            material.opacity = params.opacity;
+          });
+
+        gui
+          .addColor(params, "lineColor")
+          .name("line color")
+          .onChange(function () {
+            lineMaterial.color.set(params.lineColor);
+          });
+
+        gui.add(params, "lineOpacity", 0, 1).onChange(function () {
+          lineMaterial.opacity = params.lineOpacity;
+        });
+        gui.add(params, "altitude", 0, 300).onChange(function () {
+          meshs.forEach(function (mesh) {
+            mesh.setAltitude(params.altitude);
+          });
+        });
+        gui.add(params, "animateShow");
+      }
+
+      function animateShow() {
+        meshs.forEach(function (mesh) {
+          mesh.animateShow({
+            duration: 3000,
+          });
+        });
+      }
+
+      //default values
+      var OPTIONS = {
+        altitude: 0,
+      };
+
+      //https://zhuanlan.zhihu.com/p/199353080
+      class OutLine extends maptalks.BaseObject {
+        constructor(mesh, options, material, layer) {
+          options = maptalks.Util.extend({}, OPTIONS, options, { layer });
+          super();
+          //Initialize internal configuration
+          // https://github.com/maptalks/maptalks.three/blob/1e45f5238f500225ada1deb09b8bab18c1b52cf2/src/BaseObject.js#L135
+          this._initOptions(options);
+
+          const edges = new THREE.EdgesGeometry(mesh.getObject3d().geometry, 1);
+          const lineS = new THREE.LineSegments(edges, material);
+          this._createGroup();
+          this.getObject3d().add(lineS);
+          //Initialize internal object3d
+          // https://github.com/maptalks/maptalks.three/blob/1e45f5238f500225ada1deb09b8bab18c1b52cf2/src/BaseObject.js#L140
+
+          //set object3d position
+          this.getObject3d().position.copy(mesh.getObject3d().position);
+        }
+      }
+    </script>
+    <div class="dg ac">
+      <div class="dg main a" style="width: 245px">
+        <div
+          style="
+            width: 6px;
+            margin-left: -3px;
+            height: 196px;
+            cursor: ew-resize;
+            position: absolute;
+          "
+        ></div>
+        <ul style="height: auto">
+          <li class="cr boolean">
+            <div>
+              <span class="property-name">add</span>
+              <div class="c"><input type="checkbox" checked="checked" /></div>
+            </div>
+          </li>
+          <li class="cr color" style="border-left-color: rgb(0, 0, 0)">
+            <div>
+              <span class="property-name">building color</span>
+              <div class="c">
+                <input
+                  type="text"
+                  style="
+                    outline: none;
+                    text-align: center;
+                    color: rgb(255, 255, 255);
+                    border: 0px;
+                    font-weight: bold;
+                    text-shadow: rgba(0, 0, 0, 0.7) 0px 1px 1px;
+                    background-color: rgb(0, 0, 0);
+                  "
+                />
+                <div
+                  class="selector"
+                  style="
+                    width: 122px;
+                    height: 102px;
+                    padding: 3px;
+                    background-color: rgb(34, 34, 34);
+                    box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 3px;
+                  "
+                >
+                  <div
+                    class="field-knob"
+                    style="
+                      position: absolute;
+                      width: 12px;
+                      height: 12px;
+                      border: 2px solid rgb(255, 255, 255);
+                      box-shadow: rgba(0, 0, 0, 0.5) 0px 1px 3px;
+                      border-radius: 12px;
+                      z-index: 1;
+                      margin-left: -7px;
+                      margin-top: 93px;
+                      background-color: rgb(0, 0, 0);
+                    "
+                  ></div>
+                  <div
+                    class="saturation-field"
+                    style="
+                      width: 100px;
+                      height: 100px;
+                      border: 1px solid rgb(85, 85, 85);
+                      margin-right: 3px;
+                      display: inline-block;
+                      cursor: pointer;
+                      background: -webkit-linear-gradient(
+                        left,
+                        rgb(255, 255, 255) 0%,
+                        rgb(255, 0, 0) 100%
+                      );
+                    "
+                  >
+                    <div
+                      style="
+                        width: 100%;
+                        height: 100%;
+                        background: -webkit-linear-gradient(
+                          top,
+                          rgba(0, 0, 0, 0) 0%,
+                          rgb(0, 0, 0) 100%
+                        );
+                      "
+                    ></div>
+                  </div>
+                  <div
+                    class="hue-field"
+                    style="
+                      width: 15px;
+                      height: 100px;
+                      border: 1px solid rgb(85, 85, 85);
+                      cursor: ns-resize;
+                      position: absolute;
+                      top: 3px;
+                      right: 3px;
+                      background: -webkit-linear-gradient(
+                        top,
+                        rgb(255, 0, 0) 0%,
+                        rgb(255, 0, 255) 17%,
+                        rgb(0, 0, 255) 34%,
+                        rgb(0, 255, 255) 50%,
+                        rgb(0, 255, 0) 67%,
+                        rgb(255, 255, 0) 84%,
+                        rgb(255, 0, 0) 100%
+                      );
+                    "
+                  >
+                    <div
+                      class="hue-knob"
+                      style="
+                        position: absolute;
+                        width: 15px;
+                        height: 2px;
+                        border-right: 4px solid rgb(255, 255, 255);
+                        z-index: 1;
+                        margin-top: 100px;
+                      "
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </li>
+          <li class="cr number has-slider">
+            <div>
+              <span class="property-name">building opacity</span>
+              <div class="c">
+                <div><input type="text" /></div>
+                <div class="slider">
+                  <div class="slider-fg" style="width: 100%"></div>
+                </div>
+              </div>
+            </div>
+          </li>
+          <li class="cr color" style="border-left-color: rgb(15, 159, 190)">
+            <div>
+              <span class="property-name">line color</span>
+              <div class="c">
+                <input
+                  type="text"
+                  style="
+                    outline: none;
+                    text-align: center;
+                    color: rgb(255, 255, 255);
+                    border: 0px;
+                    font-weight: bold;
+                    text-shadow: rgba(0, 0, 0, 0.7) 0px 1px 1px;
+                    background-color: rgb(15, 159, 190);
+                  "
+                />
+                <div
+                  class="selector"
+                  style="
+                    width: 122px;
+                    height: 102px;
+                    padding: 3px;
+                    background-color: rgb(34, 34, 34);
+                    box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 3px;
+                  "
+                >
+                  <div
+                    class="field-knob"
+                    style="
+                      position: absolute;
+                      width: 12px;
+                      height: 12px;
+                      border: 2px solid rgb(255, 255, 255);
+                      box-shadow: rgba(0, 0, 0, 0.5) 0px 1px 3px;
+                      border-radius: 12px;
+                      z-index: 1;
+                      margin-left: 85.1053px;
+                      margin-top: 18.4902px;
+                      background-color: rgb(15, 159, 190);
+                    "
+                  ></div>
+                  <div
+                    class="saturation-field"
+                    style="
+                      width: 100px;
+                      height: 100px;
+                      border: 1px solid rgb(85, 85, 85);
+                      margin-right: 3px;
+                      display: inline-block;
+                      cursor: pointer;
+                      background: -webkit-linear-gradient(
+                        left,
+                        rgb(255, 255, 255) 0%,
+                        rgb(0, 209, 255) 100%
+                      );
+                    "
+                  >
+                    <div
+                      style="
+                        width: 100%;
+                        height: 100%;
+                        background: -webkit-linear-gradient(
+                          top,
+                          rgba(0, 0, 0, 0) 0%,
+                          rgb(0, 0, 0) 100%
+                        );
+                      "
+                    ></div>
+                  </div>
+                  <div
+                    class="hue-field"
+                    style="
+                      width: 15px;
+                      height: 100px;
+                      border: 1px solid rgb(85, 85, 85);
+                      cursor: ns-resize;
+                      position: absolute;
+                      top: 3px;
+                      right: 3px;
+                      background: -webkit-linear-gradient(
+                        top,
+                        rgb(255, 0, 0) 0%,
+                        rgb(255, 0, 255) 17%,
+                        rgb(0, 0, 255) 34%,
+                        rgb(0, 255, 255) 50%,
+                        rgb(0, 255, 0) 67%,
+                        rgb(255, 255, 0) 84%,
+                        rgb(255, 0, 0) 100%
+                      );
+                    "
+                  >
+                    <div
+                      class="hue-knob"
+                      style="
+                        position: absolute;
+                        width: 15px;
+                        height: 2px;
+                        border-right: 4px solid rgb(255, 255, 255);
+                        z-index: 1;
+                        margin-top: 47.0476px;
+                      "
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </li>
+          <li class="cr number has-slider">
+            <div>
+              <span class="property-name">lineOpacity</span>
+              <div class="c">
+                <div><input type="text" /></div>
+                <div class="slider">
+                  <div class="slider-fg" style="width: 70%"></div>
+                </div>
+              </div>
+            </div>
+          </li>
+          <li class="cr number has-slider">
+            <div>
+              <span class="property-name">altitude</span>
+              <div class="c">
+                <div><input type="text" /></div>
+                <div class="slider">
+                  <div class="slider-fg" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+          </li>
+          <li class="cr function">
+            <div>
+              <span class="property-name">animateShow</span>
+              <div class="c"><div class="button"></div></div>
+            </div>
+          </li>
+        </ul>
+        <div class="close-button close-bottom" style="width: 245px">
+          Close Controls
+        </div>
+      </div>
+    </div>
+
+    <div id="my-app"></div>
+  </body>
+  <grammarly-desktop-integration
+    data-grammarly-shadow-root="true"
+  ></grammarly-desktop-integration>
 </html>
